@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WooCommerce Sale Booster - Retain Customers
- * Plugin URI: https://marketing.jetwebsite.ir/
+ * Plugin URI: https://github.com/smhlotfi/woocommerce-sale-booster.git
  * Description: Increase your sale 70% by getting valuable customer insights like paid customers, canceled customers, inactive customers, and high-value buyers.
  * Version: 1.0.0
  * Author: smhlotfizadeh
