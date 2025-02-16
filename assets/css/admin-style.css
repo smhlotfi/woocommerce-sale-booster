@@ -1,0 +1,12 @@
+.wrap {
+    background-color: #f4f4f4;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 24px;
+}
+
+button.button-primary {
+    margin-top: 10px;
+}
