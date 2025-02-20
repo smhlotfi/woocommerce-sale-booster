@@ -23,6 +23,8 @@ require_once plugin_dir_path(__FILE__) . 'includes/pages/cancelled-customers-pag
 require_once plugin_dir_path(__FILE__) . 'includes/pages/ordered-before-not-recent-days-customers-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/pages/ordered-big-customers-page.php';
 
+require_once plugin_dir_path(__FILE__) . 'includes/sales_trend/index.php';
+
 
 
 

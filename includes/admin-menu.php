@@ -28,12 +28,3 @@ function sb_add_sales_trend_page() {
 }
 add_action('admin_menu', 'sb_add_sales_trend_page');
 
-// Callback function to display the sales trend page
-function sb_display_sales_trend() {
-    ?>
-    <div class="wrap">
-        <h1>Sales Trend</h1>
-        <canvas id="salesTrendChart"></canvas>
-    </div>
-    <?php
-}
