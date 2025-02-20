@@ -16,6 +16,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Include necessary files
+require_once plugin_dir_path(__FILE__) . 'includes/asset_controller/css-import-handler.php';
+
 require_once plugin_dir_path(__FILE__) . 'includes/admin-menu.php';
 require_once plugin_dir_path(__FILE__) . 'includes/export-functions.php';
 require_once plugin_dir_path(__FILE__) . 'includes/pages/paid-customers-page.php';

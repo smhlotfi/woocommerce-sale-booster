@@ -10,3 +10,13 @@ h1 {
 button.button-primary {
     margin-top: 10px;
 }
+
+
+
+/* Charts */
+
+
+#salesPieChartDiv {
+    width: 50% !important;
+    height: 50% !important;
+}
