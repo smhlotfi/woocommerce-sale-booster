@@ -15,13 +15,25 @@ function custom_exporter_add_menu() {
 }
 
 
-// function my_custom_plugin_menu() {
-//     add_menu_page('My Custom Plugin Settings', 'My Custom Plugin', 'manage_options', 'my-custom-plugin', 'my_custom_plugin_settings_page');
-// }
-// add_action('admin_menu', 'my_custom_plugin_menu');
+// Add Sales Trend submenu page
+function sb_add_sales_trend_page() {
+    add_submenu_page(
+        'sale-booster',             // Parent menu slug
+        'Sales Trend',              // Page title
+        'Sales Trend',              // Menu title
+        'manage_woocommerce',       // Capability required
+        'sb-sales-trend',           // Menu slug
+        'sb_display_sales_trend'    // Callback function
+    );
+}
+add_action('admin_menu', 'sb_add_sales_trend_page');
 
-// function my_custom_plugin_settings_page() {
-//     echo '<h1>My Custom Plugin Settings</h1>';
-//     // Add your settings form here
-// }
-
+// Callback function to display the sales trend page
+function sb_display_sales_trend() {
+    ?>
+    <div class="wrap">
+        <h1>Sales Trend</h1>
+        <canvas id="salesTrendChart"></canvas>
+    </div>
+    <?php
+}
