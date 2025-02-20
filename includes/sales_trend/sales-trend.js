@@ -4,23 +4,26 @@ jQuery(document).ready(function ($) {
         method: 'POST',
         data: { action: 'sb_get_sales_data' },
         success: function (response) {
-            if (!response || response.length === 0) {
+            // console.log("Raw Response:", response); // Debugging output
+            if (!response || response.daily_data.length === 0) {
                 console.log("No sales data found.");
                 return;
             }
 
+            // Extract line chart data
             let labels = [];
             let completedOrders = [];
             let cancelledOrders = [];
 
-            response.forEach(row => {
+            response.daily_data.forEach(row => {
                 labels.push(row.order_date);
                 completedOrders.push(row.completed_orders);
                 cancelledOrders.push(row.cancelled_orders);
             });
 
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            new Chart(ctx, {
+            // Draw Line Chart
+            const ctxLine = document.getElementById('salesTrendChart').getContext('2d');
+            new Chart(ctxLine, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -46,18 +49,36 @@ jQuery(document).ready(function ($) {
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
                         x: { title: { display: true, text: 'Date' } },
                         y: { title: { display: true, text: 'Orders' }, beginAtZero: true }
+                    }
+                }
+            });
+
+            // Extract pie chart data
+            let totalCompleted = response.total_data.total_completed || 0;
+            let totalCancelled = response.total_data.total_cancelled || 0;
+
+            // Draw Pie Chart
+            const ctxPie = document.getElementById('salesPieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed Orders', 'Canceled Orders'],
+                    datasets: [{
+                        data: [totalCompleted, totalCancelled],
+                        backgroundColor: ['green', 'red'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' }
                     }
                 }
             });
