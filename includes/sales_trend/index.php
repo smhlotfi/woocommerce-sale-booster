@@ -43,6 +43,17 @@ function sb_enqueue_admin_scripts($hook) {
     }
     
     wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true);
+    
+    // Load fallback local version in case CDN fails
+    wp_add_inline_script('chartjs-cdn', '
+        if (typeof Chart === "undefined") {
+            var script = document.createElement("script");
+            script.src = "' . plugin_dir_url(__FILE__) . 'assets/js/chart.js";
+            document.head.appendChild(script);
+        }
+    ');
+
+
     wp_enqueue_script('sb-sales-chart', plugin_dir_url(__FILE__) . 'sales-trend.js', array('jquery', 'chartjs'), null, true);
     
     wp_localize_script('sb-sales-chart', 'sb_sales_data', array(
