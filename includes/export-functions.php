@@ -14,6 +14,23 @@ function display_export_page($selected_fields, $type) {
         case 'paid-customers':
             $sql_fields = generate_sql_fields($selected_fields);
             $results = build_get_completed_or_processing_query($sql_fields);
+
+            foreach ($results as &$row) {
+                foreach ($selected_fields as $field) {
+                    
+                    if ($field === 'phone_number') {
+                        // Standardize the phone number
+                        $temp = standardize_phone_number($row[$field]);
+                        $row[$field] = $temp;
+                    } else {
+                        $row[$field] = $row[$field];
+                    }
+                    
+                }
+                
+            }
+            unset($row);
+
             // die (print_r($results, true));
             break;
         case 'cancelled-customers':
@@ -343,6 +360,9 @@ function display_field_value($field, $row) {
         $formatted_date = isset($row[$field]) ? gmdate('Y-m-d H:i:s', strtotime($row[$field])) : '';
         echo "<td>".esc_html($formatted_date)."</td>";
     } else {
+        if ($field == 'phone_number'){
+            // echo "phone number: ". $row[$field] . "<br>";
+        }
         echo '<td>' . esc_html($row[$field]) . '</td>';
     }
 }
@@ -367,4 +387,33 @@ if (isset($_POST['export_csv'])) {
         }
     }
     echo '<p>No data found for export.</p>';
+}
+
+
+
+function standardize_phone_number($phone_number) {
+    // Remove any non-digit characters (just in case there's anything like spaces or dashes)
+    $phone_number = preg_replace('/\D/', '', $phone_number);
+    
+    // If the number starts with +98, replace it with 0
+    if (substr($phone_number, 0, 2) === '98' && strlen($phone_number) === 12) {
+
+        // die("test phone : ". $phone_number);
+        // Remove the +98 and prepend 0
+        return '0' . substr($phone_number, 2);
+    }
+    
+    // If the number starts with 0 and is 11 digits, we leave it as it is
+    if (substr($phone_number, 0, 1) === '0' && strlen($phone_number) === 11) {
+        return $phone_number;
+    }
+    
+    // If the number is 10 digits (without +98 or 0), add a 0 at the beginning
+    if (strlen($phone_number) === 10) {
+        return '0' . $phone_number;
+    }
+
+    // If the phone number doesn't match any of the above conditions, return it as is
+    // You could also return an empty string or some default message if needed
+    return $phone_number;
 }
