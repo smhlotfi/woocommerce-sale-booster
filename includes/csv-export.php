@@ -28,6 +28,7 @@ function export_csv($results, $available_fields, $selected_fields) {
     fputcsv($output, $header);
 
     // Write rows of data
+    // die(print_r($results, true));
     foreach ($results as $row) {
         $row_data = [];
         foreach ($selected_fields as $field) {
@@ -37,7 +38,7 @@ function export_csv($results, $available_fields, $selected_fields) {
     }
 
     // Close the output stream after writing data
-    $wp_filesystem->close( $output );
+    fclose($output);
 
     exit;
 }
