@@ -14,6 +14,7 @@ function display_export_page($selected_fields, $type) {
         case 'paid-customers':
             $sql_fields = generate_sql_fields($selected_fields);
             $results = build_get_completed_or_processing_query($sql_fields);
+            // die (print_r($results, true));
             break;
         case 'cancelled-customers':
             $sql_fields = generate_sql_fields($selected_fields);
@@ -109,18 +110,94 @@ function build_get_completed_or_processing_query($fields) {
     // Join fields into a comma-separated string for SQL
     $fields_sql = implode(', ', $escaped_fields);
 
+    // die("<pre>". print_r($fields_sql, true) ."</pre>");
 
 
-    // die ("<pre>".var_dump($fields)."</pre>");
 
+
+    // return $wpdb->get_results(
+    //     $wpdb->prepare("
+    //     SELECT DISTINCT $fields_sql
+    //     FROM {$wpdb->prefix}wc_orders AS o
+    //     LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
+    //         ON o.id = oa.order_id AND oa.address_type = 'billing'
+    //     WHERE o.status IN (%s, %s);
+    // ", 'wc-processing', 'wc-completed'), ARRAY_A);
+
+
+
+    $woo_version = get_option('woocommerce_version');
+
+if (version_compare($woo_version, '8.0', '>=')) {
+    // For WooCommerce 8.0+ (new table) and pre-8.0 orders (old table)
     return $wpdb->get_results(
         $wpdb->prepare("
-        SELECT DISTINCT $fields_sql
-        FROM {$wpdb->prefix}wc_orders AS o
-        LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
-            ON o.id = oa.order_id AND oa.address_type = 'billing'
-        WHERE o.status IN (%s, %s);
-    ", 'wc-processing', 'wc-completed'), ARRAY_A);
+            -- New table query for WooCommerce 8.0+
+            (SELECT DISTINCT o.id AS order_id, 
+                             COALESCE(oa.phone, '') AS phone_number, 
+                             COALESCE(oa.email, '') AS email, 
+                             oa.first_name AS first_name, 
+                             oa.last_name AS last_name, 
+                             o.status, 
+                             o.date_created_gmt AS order_date
+            FROM {$wpdb->prefix}wc_orders AS o
+            LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
+                ON o.id = oa.order_id AND oa.address_type = 'billing'
+            WHERE o.status IN ('wc-processing', 'wc-completed'))
+            
+            UNION ALL
+            
+            -- Old table query for pre-8.0 WooCommerce
+            (SELECT DISTINCT p.ID AS order_id, 
+                             COALESCE(pm_phone.meta_value, '') AS phone_number, 
+                             COALESCE(pm_email.meta_value, '') AS email, 
+                             pm_first_name.meta_value AS first_name, 
+                             pm_last_name.meta_value AS last_name, 
+                             p.post_status AS status, 
+                             p.post_date AS order_date
+            FROM {$wpdb->prefix}posts AS p
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
+                ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
+                ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
+                ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
+                ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+            WHERE p.post_type = 'shop_order'
+            AND p.post_status IN ('wc-processing', 'wc-completed'))
+            
+            ORDER BY order_date DESC
+        "), ARRAY_A);
+} else {
+    // Use only old WooCommerce order structure (pre-8.0)
+    return $wpdb->get_results(
+        $wpdb->prepare("
+            SELECT DISTINCT p.ID AS order_id, 
+                             COALESCE(pm_phone.meta_value, '') AS phone_number, 
+                             COALESCE(pm_email.meta_value, '') AS email, 
+                             pm_first_name.meta_value AS first_name, 
+                             pm_last_name.meta_value AS last_name, 
+                             p.post_status AS status, 
+                             p.post_date AS order_date
+            FROM {$wpdb->prefix}posts AS p
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
+                ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
+                ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
+                ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
+            LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
+                ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+            WHERE p.post_type = 'shop_order'
+            AND p.post_status IN ('wc-processing', 'wc-completed')
+            ORDER BY order_date DESC
+        "), ARRAY_A);
+}
+
+
+
+
 }
 
 
