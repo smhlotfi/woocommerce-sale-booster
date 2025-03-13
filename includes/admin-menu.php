@@ -4,10 +4,10 @@ add_action('admin_menu', 'custom_exporter_add_menu');
 
 function custom_exporter_add_menu() {
     add_menu_page(
-        'Sale Booster',
-        'Sale Booster',
+        'Smart Sales Report',
+        'Smart Sales Report',
         'manage_options',
-        'sale-booster',
+        'smart-sales-report',
         'custom_exporter_page',
         'dashicons-database-export',
         25
@@ -16,15 +16,15 @@ function custom_exporter_add_menu() {
 
 
 // Add Sales Trend submenu page
-function sb_add_sales_trend_page() {
+function ssr_add_sales_trend_page() {
     add_submenu_page(
-        'sale-booster',             // Parent menu slug
+        'smart-sales-report',       // Parent menu slug
         'Sales Trend',              // Page title
         'Sales Trend',              // Menu title
         'manage_woocommerce',       // Capability required
-        'sb-sales-trend',           // Menu slug
-        'sb_display_sales_trend'    // Callback function
+        'ssr-sales-trend',           // Menu slug
+        'ssr_display_sales_trend'    // Callback function
     );
 }
-add_action('admin_menu', 'sb_add_sales_trend_page');
+add_action('admin_menu', 'ssr_add_sales_trend_page');
 

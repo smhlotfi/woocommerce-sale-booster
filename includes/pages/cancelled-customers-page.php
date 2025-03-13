@@ -29,7 +29,9 @@ function cancelled_customers_page(){
                 $checked = in_array($key, $selected_fields) ? 'checked' : '';
                 echo "<label><input type='checkbox' name='selected_fields[]' value='" . esc_attr($key) . "' ". esc_attr($checked). "> ".esc_html($label)."</label><br>";
             }
+            wp_nonce_field('export_cancelled_customers_nonce', 'export_cancelled_customers_nonce');
             ?>
+            <input type="hidden" name="action" value="export_cancelled_customers">
             <br>
             <!-- Submit Button to trigger the export -->
             <input type="submit" class="button button-primary" value="Export Data">
@@ -38,9 +40,37 @@ function cancelled_customers_page(){
         <?php
         // If the export button is clicked, call the function to display the results
         if (isset($_POST['selected_fields']) && !empty($_POST['selected_fields'])) {
-            display_export_page($selected_fields, 'cancelled-customers');
+            handle_export_cancelled_customers();
         }
         ?>
     </div>
     <?php
+}
+
+
+
+function handle_export_cancelled_customers() {
+    if (
+        ! isset($_POST['export_cancelled_customers_nonce']) || 
+        ! wp_verify_nonce($_POST['export_cancelled_customers_nonce'], 'export_cancelled_customers_nonce')
+    ) {
+        wp_die('Security check failed.');
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_die('You do not have permission to export this data.');
+    }
+
+    if (!empty($_POST['selected_fields'])) {
+        $selected_fields = array_map('sanitize_text_field', $_POST['selected_fields']);
+
+        // Handle export here
+        display_export_page($selected_fields, 'cancelled-customers');
+        exit;
+    }
+
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p>Please select at least one field to export.</p></div>';
+    });
+    exit;
 }

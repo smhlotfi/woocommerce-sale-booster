@@ -62,14 +62,15 @@ function display_export_page($selected_fields, $type) {
     echo '<div class="wrap">';
     echo '<h1>Order Data Export</h1>';
 
-    display_field_selection_form($selected_fields, $available_fields);
-
     if (!empty($results)) {
         display_results_table($selected_fields, $available_fields, $results);
+        $nonce = wp_create_nonce('export_csv_nonce');
         // Store the results in a hidden input
-        echo '<form method="post">';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        echo '<input type="hidden" name="action" value="export_csv">';
         echo '<input type="hidden" name="export_data" value="' . esc_attr(json_encode($results, JSON_UNESCAPED_UNICODE)) . '">';
         echo '<input type="hidden" name="selected_fields" value="' . esc_attr(json_encode($selected_fields, JSON_UNESCAPED_UNICODE)) . '">';
+        echo '<input type="hidden" name="export_csv_nonce" value="' . $nonce . '">';
         echo '<button type="submit" name="export_csv">Export CSV</button>';
         echo '</form>';
     } else {
@@ -317,24 +318,6 @@ function build_get_high_value_customers_query($fields, $min_value) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-// Function to display the form for selecting fields to export
-function display_field_selection_form($selected_fields, $available_fields) {
-    echo '<form method="post" id="export-fields-form">';
-    echo '<input type="submit" name="export_csv" class="button button-primary" value="Export to CSV">';
-    echo '</form>';
-}
-
 // Function to display results in a table
 function display_results_table($selected_fields, $available_fields, $results) {
     echo '<table class="widefat striped"><thead><tr>';
@@ -368,27 +351,39 @@ function display_field_value($field, $row) {
 }
 
 
+add_action('admin_post_export_csv', 'handle_export_csv');
 
+function handle_export_csv(){
+    
+    // Handle CSV Export
+    // if (isset($_POST['export_csv'])) {
 
-// Handle CSV Export
-if (isset($_POST['export_csv'])) {
-    if (!empty($_POST['export_data']) && !empty($_POST['selected_fields'])) {
-        $export_results = json_decode(stripslashes($_POST['export_data']), true);
-        $selected_fields = json_decode(stripslashes($_POST['selected_fields']), true);
-
-        array_walk_recursive($export_results, function (&$value) {
-            $value = mb_convert_encoding($value, 'UTF-8', 'auto');
-        });
-        
-
-        if (!empty($export_results)) {
-            export_csv($export_results, get_available_fields(), $selected_fields);
-            exit;
+        if ( ! isset( $_POST['export_csv_nonce'] ) || ! wp_verify_nonce( $_POST['export_csv_nonce'], 'export_csv_nonce' )) {
+            wp_die( 'Security check failed.' );
         }
-    }
-    echo '<p>No data found for export.</p>';
-}
+        
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'You do not have permission to export this data.' );
+        }
 
+        if (!empty($_POST['export_data']) && !empty($_POST['selected_fields'])) {
+            $export_results = json_decode(stripslashes($_POST['export_data']), true);
+            $selected_fields = json_decode(stripslashes($_POST['selected_fields']), true);
+
+            array_walk_recursive($export_results, function (&$value) {
+                $value = mb_convert_encoding($value, 'UTF-8', 'auto');
+            });
+            
+
+            if (!empty($export_results)) {
+                export_csv($export_results, get_available_fields(), $selected_fields);
+                exit;
+            }
+        }
+        echo '<p>No data found for export.</p>';
+    // }
+
+}
 
 
 function standardize_phone_number($phone_number) {

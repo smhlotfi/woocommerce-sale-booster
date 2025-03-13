@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WooCommerce Sale Booster - Retain Customers
+ * Plugin Name: Smart Sales Report - Boost Sales & Retain Customers
  * Plugin URI: https://github.com/smhlotfi/woocommerce-sale-booster.git
  * Description: Increase your sale 70% by getting valuable customer insights like paid customers, canceled customers, inactive customers, and high-value buyers.
  * Version: 1.0.0
@@ -39,10 +39,10 @@ function custom_exporter_page() {
     <div class="wrap">
         <h2>WooCommerce Marketing Settings</h2>
         <h2 class="nav-tab-wrapper">
-            <a href="?page=sale-booster&tab=paid-customers" class="nav-tab <?php echo $active_tab == 'paid-customers' ? 'nav-tab-active' : ''; ?>">Paid Customers</a>
-            <a href="?page=sale-booster&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
-            <a href="?page=sale-booster&tab=ordered-before-not-recent-days" class="nav-tab <?php echo $active_tab == 'ordered-before-not-recent-days' ? 'nav-tab-active' : ''; ?>">No Recent Purchase</a>
-            <a href="?page=sale-booster&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a>
+            <a href="?page=smart-sales-report&tab=paid-customers" class="nav-tab <?php echo $active_tab == 'paid-customers' ? 'nav-tab-active' : ''; ?>">Paid Customers</a>
+            <a href="?page=smart-sales-report&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
+            <a href="?page=smart-sales-report&tab=ordered-before-not-recent-days" class="nav-tab <?php echo $active_tab == 'ordered-before-not-recent-days' ? 'nav-tab-active' : ''; ?>">No Recent Purchase</a>
+            <a href="?page=smart-sales-report&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a>
         </h2>
 
         <div class="tab-content">

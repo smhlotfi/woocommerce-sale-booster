@@ -1,17 +1,17 @@
 <?php
 
 // Callback function to display the sales trend page
-function sb_display_sales_trend() {
+function ssr_display_sales_trend() {
 
     $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'customers-orders';
     ?>
     <div class="wrap">
         <h2>Sales Trend</h2>
         <h2 class="nav-tab-wrapper">
-            <a href="?page=sb-sales-trend&tab=customers-orders" class="nav-tab <?php echo $active_tab == 'customers-orders' ? 'nav-tab-active' : ''; ?>">Customers Orders</a>
-            <a href="?page=sb-sales-trend&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
-            <a href="?page=sb-sales-trend&tab=ordered-before-not-recent-days" class="nav-tab <?php echo $active_tab == 'ordered-before-not-recent-days' ? 'nav-tab-active' : ''; ?>">No Recent Purchase</a>
-            <a href="?page=sb-sales-trend&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a>
+            <a href="?page=ssr-sales-trend&tab=customers-orders" class="nav-tab <?php echo $active_tab == 'customers-orders' ? 'nav-tab-active' : ''; ?>">Customers Orders</a>
+            <a href="?page=ssr-sales-trend&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
+            <a href="?page=ssr-sales-trend&tab=ordered-before-not-recent-days" class="nav-tab <?php echo $active_tab == 'ordered-before-not-recent-days' ? 'nav-tab-active' : ''; ?>">No Recent Purchase</a>
+            <a href="?page=ssr-sales-trend&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a>
         </h2>
 
         <div class="tab-content">
@@ -19,7 +19,7 @@ function sb_display_sales_trend() {
             if ($active_tab == 'customers-orders') {
                 echo '<h3>Paid Customers</h3>';
                 ?>
-                <div id="sb-charts-container" class="wrap">
+                <div id="ssr-charts-container" class="wrap">
                     <canvas id="salesTrendChart" width="400" height="200"></canvas>
                     <div id="salesPieChartDiv">
                         <canvas id="salesPieChart" width="200" height="200"></canvas>
@@ -48,7 +48,7 @@ function sb_display_sales_trend() {
 
 
 // Fetch completed orders per day
-function sb_get_sales_data() {
+function ssr_get_sales_data() {
     global $wpdb;
     // Get order counts per day for completed and canceled orders
     $daily_results = $wpdb->get_results("
@@ -71,7 +71,7 @@ function sb_get_sales_data() {
     ", ARRAY_A);
 
     // Debugging: Output raw results and stop execution
-    // Check on : DOMAIN/wp-admin/admin-ajax.php?action=sb_get_sales_data
+    // Check on : DOMAIN/wp-admin/admin-ajax.php?action=ssr_get_sales_data
     // echo '<pre>';
     // print_r($total_counts);
     // echo '</pre>';
@@ -83,13 +83,13 @@ function sb_get_sales_data() {
     ]);
     // wp_send_json($results); // Send data as JSON
 }
-add_action('wp_ajax_sb_get_sales_data', 'sb_get_sales_data');
+add_action('wp_ajax_ssr_get_sales_data', 'ssr_get_sales_data');
 
 
 
 // Enqueue scripts for Chart.js
-function sb_enqueue_admin_scripts($hook) {
-    if ($hook !== 'sale-booster_page_sb-sales-trend') {
+function ssr_enqueue_admin_scripts($hook) {
+    if ($hook !== 'smart-sales-report_page_ssr-sales-trend') {
         return;
     }
     
@@ -105,10 +105,10 @@ function sb_enqueue_admin_scripts($hook) {
     ');
 
 
-    wp_enqueue_script('sb-sales-chart', plugin_dir_url(__FILE__) . 'sales-trend.js', array('jquery', 'chartjs'), null, true);
+    wp_enqueue_script('ssr-sales-chart', plugin_dir_url(__FILE__) . 'sales-trend.js', array('jquery', 'chartjs'), null, true);
     
-    wp_localize_script('sb-sales-chart', 'sb_sales_data', array(
+    wp_localize_script('ssr-sales-chart', 'ssr_sales_data', array(
         'ajax_url' => admin_url('admin-ajax.php'),
     ));
 }
-add_action('admin_enqueue_scripts', 'sb_enqueue_admin_scripts');
+add_action('admin_enqueue_scripts', 'ssr_enqueue_admin_scripts');

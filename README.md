@@ -1,4 +1,4 @@
-=== WooCommerce Sale Booster - Retain Customers ===
+=== Smart Sales Report - Boost Sales & Retain Customers ===
 Contributors: smhlotfizadeh
 Tags: woocommerce, marketing, user data, CRM, export, sales, customer behavior, marketing insights
 Requires at least: 5.0
@@ -11,7 +11,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 == Description ==
 
 Increase your sale 70% by getting valuable customer insights like paid customers, canceled customers, inactive customers, and high-value buyers.
-WooCommerce Sale Booster plugin designed to help store owners gather marketing insights from their WooCommerce store. The plugin allows you to export essential customer data, including purchase history and user behaviors. This data is useful for marketing campaigns, sales strategies, and customer retention efforts.
+Smart Sales Report - Boost Sales & Retain Customers plugin designed to help store owners gather marketing insights from their WooCommerce store. The plugin allows you to export essential customer data, including purchase history and user behaviors. This data is useful for marketing campaigns, sales strategies, and customer retention efforts.
 
 ### Features:
 - Export a list of users who have made purchases on your WooCommerce store.
@@ -24,7 +24,7 @@ This plugin is perfect for WooCommerce store owners who need detailed insights i
 
 == Installation ==
 
-1. Upload the `wooCommerce-sale-booster` folder to the `/wp-content/plugins/` directory.
+1. Upload the `smart-sales-report` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Once activated, navigate to the plugin settings to configure your desired export options.
 
