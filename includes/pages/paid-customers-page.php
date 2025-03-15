@@ -12,8 +12,15 @@ function paid_customers_page(){
         'status' => 'Order Status'
     ];
 
+    $allowed_fields = ['order_id', 'phone_number', 'email', 'first_name', 'last_name'];
+
     // Get selected fields from POST request (or use default fields)
-    $selected_fields = isset($_POST['selected_fields']) ? $_POST['selected_fields'] : ['order_id', 'phone_number', 'email', 'first_name', 'last_name'];
+    $selected_fields = isset($_POST['selected_fields']) 
+    ? array_intersect(
+        array_map('sanitize_text_field', $_POST['selected_fields']), 
+        $allowed_fields
+    ) 
+    : $allowed_fields;
 
     ?>
     <div class="wrap">

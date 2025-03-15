@@ -41,14 +41,21 @@ function display_export_page($selected_fields, $type) {
             // Here we assume you are passing the number of days as $days
             
             // die ($_POST['woo_sale_booster_days']);
-            $days = isset($_POST['woo_sale_booster_days']) ? ($_POST['woo_sale_booster_days']) : 30;
+            $days = isset($_POST['woo_sale_booster_days']) ? absint($_POST['woo_sale_booster_days']) : 30;
+            if ($days < 0 || $days > 99999) {
+                $days = 30; // Default value
+            }
             $sql_fields = generate_sql_fields($selected_fields);
             $results = build_get_customers_no_recent_purchase_query($sql_fields, $days);
             break;
 
         case 'big-purchase-customers':
 
-            $min_value = ($_POST['woo_sale_booster_min_value']) ? ($_POST['woo_sale_booster_min_value']) : 100;
+            $min_value = ($_POST['woo_sale_booster_min_value']) ? floatval($_POST['woo_sale_booster_min_value']) : 0;
+
+            if ($min_value < 0 || $min_value > 9999999999) {
+                $min_value = 0; // Reset to default if invalid
+            }
             
             $sql_fields = generate_sql_fields($selected_fields);
             $results = build_get_high_value_customers_query($sql_fields, $min_value);
@@ -367,8 +374,8 @@ function handle_export_csv(){
         }
 
         if (!empty($_POST['export_data']) && !empty($_POST['selected_fields'])) {
-            $export_results = json_decode(stripslashes($_POST['export_data']), true);
-            $selected_fields = json_decode(stripslashes($_POST['selected_fields']), true);
+            $export_results = json_decode(wp_unslash($_POST['export_data']), true);
+            $selected_fields = json_decode(wp_unslash($_POST['selected_fields']), true);
 
             array_walk_recursive($export_results, function (&$value) {
                 $value = mb_convert_encoding($value, 'UTF-8', 'auto');

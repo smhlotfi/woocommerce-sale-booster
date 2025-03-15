@@ -12,8 +12,15 @@ function ordered_big_customers_page(){
         'status' => 'Order Status'
     ];
 
+    $allowed_fields = ['order_id', 'phone_number', 'email', 'first_name', 'last_name'];
+
     // Get selected fields from POST request (or use default fields)
-    $selected_fields = isset($_POST['selected_fields']) ? $_POST['selected_fields'] : ['order_id', 'phone_number', 'email', 'first_name', 'last_name'];
+    $selected_fields = isset($_POST['selected_fields']) 
+    ? array_intersect(
+        array_map('sanitize_text_field', $_POST['selected_fields']), 
+        $allowed_fields
+    ) 
+    : $allowed_fields;
 
     ?>
     <div class="wrap">
@@ -71,7 +78,7 @@ function handle_export_big_purchase_customers() {
     $min_value = isset($_POST['woo_sale_booster_min_value']) ? floatval($_POST['woo_sale_booster_min_value']) : 0;
 
     // Ensure minimum value is valid
-    if ($min_value <= 0) {
+    if ($min_value < 0 || $min_value > 9999999999) {
         echo '<p>Please enter a valid minimum purchase value.</p>';
         return;
     }

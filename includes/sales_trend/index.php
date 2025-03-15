@@ -1,9 +1,17 @@
 <?php
 
+$allowed_tabs = ['customers-orders', 'cancelled-customers', 'big-purchase-customers', 'ordered-before-not-recent-days'];
+
 // Callback function to display the sales trend page
 function ssr_display_sales_trend() {
 
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'customers-orders';
+    $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'customers-orders';
+
+    // Validation
+    if (!in_array($active_tab, $allowed_tabs)) {
+        $active_tab = 'customers-orders'; // Default value
+    }
+
     ?>
     <div class="wrap">
         <h2>Sales Trend</h2>

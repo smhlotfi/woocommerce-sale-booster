@@ -28,13 +28,19 @@ require_once plugin_dir_path(__FILE__) . 'includes/pages/ordered-big-customers-p
 require_once plugin_dir_path(__FILE__) . 'includes/sales_trend/index.php';
 
 
-
+$allowed_tabs = ['paid-customers', 'cancelled-customers', 'big-purchase-customers', 'ordered-before-not-recent-days'];
 
 
 // Plugin page content
 function custom_exporter_page() {
 
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'paid-customers';
+    $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'paid-customers';
+
+    // Validation
+    if (!in_array($active_tab, $allowed_tabs)) {
+        $active_tab = 'paid-customers'; // Default value
+    }
+
     ?>
     <div class="wrap">
         <h2>WooCommerce Marketing Settings</h2>
