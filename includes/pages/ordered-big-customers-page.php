@@ -1,5 +1,5 @@
 <?php
-function ordered_big_customers_page(){
+function ssrSales2000_ordered_big_customers_page(){
     // Available fields that can be exported
     $available_fields = [
         'order_id' => 'Order ID',
@@ -52,14 +52,14 @@ function ordered_big_customers_page(){
         <?php
         // If the export button is clicked, call the function to display the results
         if (isset($_POST['selected_fields']) && !empty($_POST['selected_fields'])) {
-            handle_export_big_purchase_customers();
+            ssrSales2000_handle_export_big_purchase_customers();
         }
         ?>
     </div>
     <?php
 }
 
-function handle_export_big_purchase_customers() {
+function ssrSales2000_handle_export_big_purchase_customers() {
     // Check nonce for security
     if (
         !isset($_POST['export_big_purchase_nonce']) || 
@@ -85,7 +85,7 @@ function handle_export_big_purchase_customers() {
 
     if (!empty($selected_fields)) {
         // Handle export here
-        display_export_page($selected_fields, 'no-recent-purchase');
+        ssrSales2000_display_export_page($selected_fields, 'no-recent-purchase');
         exit;
     }
 

@@ -2,7 +2,7 @@ jQuery(document).ready(function ($) {
     $.ajax({
         url: ssr_sales_data.ajax_url,
         method: 'POST',
-        data: { action: 'ssr_get_sales_data' },
+        data: { action: 'ssrSales2000_get_sales_data' },
         success: function (response) {
             // console.log("Raw Response:", response); // Debugging output
             if (!response || response.daily_data.length === 0) {

@@ -1,26 +1,24 @@
 <?php
 require_once plugin_dir_path(__FILE__) . 'csv-export.php';
 
-global $results;
-
 // Main function to display export page
-function display_export_page($selected_fields, $type) {
-    global $wpdb, $results;
+function ssrSales2000_display_export_page($selected_fields, $type) {
+    global $wpdb;
 
-    $available_fields = get_available_fields();
+    $available_fields = ssrSales2000_get_available_fields();
     
 
     switch ($type) {
         case 'paid-customers':
-            $sql_fields = generate_sql_fields($selected_fields);
-            $results = build_get_completed_or_processing_query($sql_fields);
+            $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
+            $results = ssrSales2000_build_get_completed_or_processing_query($sql_fields);
 
             foreach ($results as &$row) {
                 foreach ($selected_fields as $field) {
                     
                     if ($field === 'phone_number') {
                         // Standardize the phone number
-                        $temp = standardize_phone_number($row[$field]);
+                        $temp = ssrSales2000_standardize_phone_number($row[$field]);
                         $row[$field] = $temp;
                     } else {
                         $row[$field] = $row[$field];
@@ -34,8 +32,8 @@ function display_export_page($selected_fields, $type) {
             // die (print_r($results, true));
             break;
         case 'cancelled-customers':
-            $sql_fields = generate_sql_fields($selected_fields);
-            $results = build_get_cancelled_orders_query($sql_fields);
+            $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
+            $results = ssrSales2000_build_get_cancelled_orders_query($sql_fields);
             break;
         case 'no-recent-purchase':
             // Here we assume you are passing the number of days as $days
@@ -45,8 +43,8 @@ function display_export_page($selected_fields, $type) {
             if ($days < 0 || $days > 99999) {
                 $days = 30; // Default value
             }
-            $sql_fields = generate_sql_fields($selected_fields);
-            $results = build_get_customers_no_recent_purchase_query($sql_fields, $days);
+            $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
+            $results = ssrSales2000_build_get_customers_no_recent_purchase_query($sql_fields, $days);
             break;
 
         case 'big-purchase-customers':
@@ -57,12 +55,12 @@ function display_export_page($selected_fields, $type) {
                 $min_value = 0; // Reset to default if invalid
             }
             
-            $sql_fields = generate_sql_fields($selected_fields);
-            $results = build_get_high_value_customers_query($sql_fields, $min_value);
+            $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
+            $results = ssrSales2000_build_get_high_value_customers_query($sql_fields, $min_value);
             break;
 
     }
-    // $query = build_get_completed_or_processing_query($sql_fields);
+    // $query = ssrSales2000_build_get_completed_or_processing_query($sql_fields);
 
     // $results = $wpdb->get_results($query, ARRAY_A);
 
@@ -70,7 +68,7 @@ function display_export_page($selected_fields, $type) {
     echo '<h1>Order Data Export</h1>';
 
     if (!empty($results)) {
-        display_results_table($selected_fields, $available_fields, $results);
+        ssrSales2000_display_results_table($selected_fields, $available_fields, $results);
         $nonce = wp_create_nonce('export_csv_nonce');
         // Store the results in a hidden input
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
@@ -89,7 +87,7 @@ function display_export_page($selected_fields, $type) {
 
 
 // Function to get available fields for export
-function get_available_fields() {
+function ssrSales2000_get_available_fields() {
     return [
         'order_id' => 'Order ID',
         'phone_number' => 'Phone',
@@ -103,7 +101,7 @@ function get_available_fields() {
 }
 
 // // Function to generate SQL fields based on selected fields
-function generate_sql_fields($selected_fields) {
+function ssrSales2000_generate_sql_fields($selected_fields) {
     $sql_fields = [];
 
     if (in_array('order_id', $selected_fields)) $sql_fields[] = "o.id AS order_id";
@@ -119,7 +117,7 @@ function generate_sql_fields($selected_fields) {
 }
 
 // Function to build SQL query
-function build_get_completed_or_processing_query($fields) {
+function ssrSales2000_build_get_completed_or_processing_query($fields) {
     global $wpdb;
     
     // Escape only table and column names, but leave SQL functions like COALESCE untouched
@@ -153,72 +151,72 @@ function build_get_completed_or_processing_query($fields) {
 
     $woo_version = get_option('woocommerce_version');
 
-if (version_compare($woo_version, '8.0', '>=')) {
-    // For WooCommerce 8.0+ (new table) and pre-8.0 orders (old table)
-    return $wpdb->get_results(
-        $wpdb->prepare("
-            -- New table query for WooCommerce 8.0+
-            (SELECT DISTINCT o.id AS order_id, 
-                             COALESCE(oa.phone, '') AS phone_number, 
-                             COALESCE(oa.email, '') AS email, 
-                             oa.first_name AS first_name, 
-                             oa.last_name AS last_name, 
-                             o.status, 
-                             o.date_created_gmt AS order_date
-            FROM {$wpdb->prefix}wc_orders AS o
-            LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
-                ON o.id = oa.order_id AND oa.address_type = 'billing'
-            WHERE o.status IN ('wc-processing', 'wc-completed'))
-            
-            UNION ALL
-            
-            -- Old table query for pre-8.0 WooCommerce
-            (SELECT DISTINCT p.ID AS order_id, 
-                             COALESCE(pm_phone.meta_value, '') AS phone_number, 
-                             COALESCE(pm_email.meta_value, '') AS email, 
-                             pm_first_name.meta_value AS first_name, 
-                             pm_last_name.meta_value AS last_name, 
-                             p.post_status AS status, 
-                             p.post_date AS order_date
-            FROM {$wpdb->prefix}posts AS p
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
-                ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
-                ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
-                ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
-                ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
-            WHERE p.post_type = 'shop_order'
-            AND p.post_status IN ('wc-processing', 'wc-completed'))
-            
-            ORDER BY order_date DESC
-        "), ARRAY_A);
-} else {
-    // Use only old WooCommerce order structure (pre-8.0)
-    return $wpdb->get_results(
-        $wpdb->prepare("
-            SELECT DISTINCT p.ID AS order_id, 
-                             COALESCE(pm_phone.meta_value, '') AS phone_number, 
-                             COALESCE(pm_email.meta_value, '') AS email, 
-                             pm_first_name.meta_value AS first_name, 
-                             pm_last_name.meta_value AS last_name, 
-                             p.post_status AS status, 
-                             p.post_date AS order_date
-            FROM {$wpdb->prefix}posts AS p
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
-                ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
-                ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
-                ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
-            LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
-                ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
-            WHERE p.post_type = 'shop_order'
-            AND p.post_status IN ('wc-processing', 'wc-completed')
-            ORDER BY order_date DESC
-        "), ARRAY_A);
-}
+    if (version_compare($woo_version, '8.0', '>=')) {
+        // For WooCommerce 8.0+ (new table) and pre-8.0 orders (old table)
+        return $wpdb->get_results(
+            $wpdb->prepare("
+                -- New table query for WooCommerce 8.0+
+                (SELECT DISTINCT o.id AS order_id, 
+                                COALESCE(oa.phone, '') AS phone_number, 
+                                COALESCE(oa.email, '') AS email, 
+                                oa.first_name AS first_name, 
+                                oa.last_name AS last_name, 
+                                o.status, 
+                                o.date_created_gmt AS order_date
+                FROM {$wpdb->prefix}wc_orders AS o
+                LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
+                    ON o.id = oa.order_id AND oa.address_type = 'billing'
+                WHERE o.status IN ('wc-processing', 'wc-completed'))
+                
+                UNION ALL
+                
+                -- Old table query for pre-8.0 WooCommerce
+                (SELECT DISTINCT p.ID AS order_id, 
+                                COALESCE(pm_phone.meta_value, '') AS phone_number, 
+                                COALESCE(pm_email.meta_value, '') AS email, 
+                                pm_first_name.meta_value AS first_name, 
+                                pm_last_name.meta_value AS last_name, 
+                                p.post_status AS status, 
+                                p.post_date AS order_date
+                FROM {$wpdb->prefix}posts AS p
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
+                    ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
+                    ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
+                    ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
+                    ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-processing', 'wc-completed'))
+                
+                ORDER BY order_date DESC
+            "), ARRAY_A);
+    } else {
+        // Use only old WooCommerce order structure (pre-8.0)
+        return $wpdb->get_results(
+            $wpdb->prepare("
+                SELECT DISTINCT p.ID AS order_id, 
+                                COALESCE(pm_phone.meta_value, '') AS phone_number, 
+                                COALESCE(pm_email.meta_value, '') AS email, 
+                                pm_first_name.meta_value AS first_name, 
+                                pm_last_name.meta_value AS last_name, 
+                                p.post_status AS status, 
+                                p.post_date AS order_date
+                FROM {$wpdb->prefix}posts AS p
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
+                    ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
+                    ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
+                    ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
+                    ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-processing', 'wc-completed')
+                ORDER BY order_date DESC
+            "), ARRAY_A);
+    }
 
 
 
@@ -227,7 +225,7 @@ if (version_compare($woo_version, '8.0', '>=')) {
 
 
 // Function to get customers with cancelled orders
-function build_get_cancelled_orders_query($fields) {
+function ssrSales2000_build_get_cancelled_orders_query($fields) {
     global $wpdb;
 
     // Escape only table and column names, but leave SQL functions like COALESCE untouched
@@ -254,7 +252,7 @@ function build_get_cancelled_orders_query($fields) {
 }
 
 // Function to get customers who ordered before but not in the last recent days
-function build_get_customers_no_recent_purchase_query($fields, $days) {
+function ssrSales2000_build_get_customers_no_recent_purchase_query($fields, $days) {
     global $wpdb;
 
     // Escape only table and column names, but leave SQL functions like COALESCE untouched
@@ -295,7 +293,7 @@ function build_get_customers_no_recent_purchase_query($fields, $days) {
 }
 
 // Function to get customers with high-value purchases
-function build_get_high_value_customers_query($fields, $min_value) {
+function ssrSales2000_build_get_high_value_customers_query($fields, $min_value) {
     global $wpdb;
 
     // Escape only table and column names, but leave SQL functions like COALESCE untouched
@@ -326,7 +324,7 @@ function build_get_high_value_customers_query($fields, $min_value) {
 
 
 // Function to display results in a table
-function display_results_table($selected_fields, $available_fields, $results) {
+function ssrSales2000_display_results_table($selected_fields, $available_fields, $results) {
     echo '<table class="widefat striped"><thead><tr>';
     foreach ($selected_fields as $field) {
         echo "<th>".esc_html($available_fields[$field])."</th>";
@@ -336,7 +334,7 @@ function display_results_table($selected_fields, $available_fields, $results) {
     foreach ($results as $row) {
         echo '<tr>';
         foreach ($selected_fields as $field) {
-            display_field_value($field, $row);
+            ssrSales2000_display_field_value($field, $row);
         }
         echo '</tr>';
     }
@@ -345,7 +343,7 @@ function display_results_table($selected_fields, $available_fields, $results) {
 }
 
 // Function to display the value for each field, formatting "order_date"
-function display_field_value($field, $row) {
+function ssrSales2000_display_field_value($field, $row) {
     if ($field == 'order_date') {
         $formatted_date = isset($row[$field]) ? gmdate('Y-m-d H:i:s', strtotime($row[$field])) : '';
         echo "<td>".esc_html($formatted_date)."</td>";
@@ -358,9 +356,9 @@ function display_field_value($field, $row) {
 }
 
 
-add_action('admin_post_export_csv', 'handle_export_csv');
+add_action('admin_post_export_csv', 'ssrSales2000_handle_export_csv');
 
-function handle_export_csv(){
+function ssrSales2000_handle_export_csv(){
     
     // Handle CSV Export
     // if (isset($_POST['export_csv'])) {
@@ -383,7 +381,7 @@ function handle_export_csv(){
             
 
             if (!empty($export_results)) {
-                export_csv($export_results, get_available_fields(), $selected_fields);
+                ssrSales2000_export_csv($export_results, ssrSales2000_get_available_fields(), $selected_fields);
                 exit;
             }
         }
@@ -393,7 +391,7 @@ function handle_export_csv(){
 }
 
 
-function standardize_phone_number($phone_number) {
+function ssrSales2000_standardize_phone_number($phone_number) {
     // Remove any non-digit characters (just in case there's anything like spaces or dashes)
     $phone_number = preg_replace('/\D/', '', $phone_number);
     

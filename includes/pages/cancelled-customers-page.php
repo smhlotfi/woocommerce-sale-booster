@@ -1,5 +1,5 @@
 <?php
-function cancelled_customers_page(){
+function ssrSales2000_cancelled_customers_page(){
     // Available fields that can be exported
     $available_fields = [
         'order_id' => 'Order ID',
@@ -47,16 +47,14 @@ function cancelled_customers_page(){
         <?php
         // If the export button is clicked, call the function to display the results
         if (isset($_POST['selected_fields']) && !empty($_POST['selected_fields'])) {
-            handle_export_cancelled_customers();
+            ssrSales2000_handle_export_cancelled_customers();
         }
         ?>
     </div>
     <?php
 }
 
-
-
-function handle_export_cancelled_customers() {
+function ssrSales2000_handle_export_cancelled_customers() {
     if (
         ! isset($_POST['export_cancelled_customers_nonce']) || 
         ! wp_verify_nonce($_POST['export_cancelled_customers_nonce'], 'export_cancelled_customers_nonce')
@@ -72,7 +70,7 @@ function handle_export_cancelled_customers() {
         $selected_fields = array_map('sanitize_text_field', $_POST['selected_fields']);
 
         // Handle export here
-        display_export_page($selected_fields, 'cancelled-customers');
+        ssrSales2000_display_export_page($selected_fields, 'cancelled-customers');
         exit;
     }
 

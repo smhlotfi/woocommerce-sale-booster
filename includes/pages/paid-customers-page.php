@@ -1,5 +1,5 @@
 <?php
-function paid_customers_page(){
+function ssrSales2000_paid_customers_page(){
     // Available fields that can be exported
     $available_fields = [
         'order_id' => 'Order ID',
@@ -48,7 +48,7 @@ function paid_customers_page(){
         <?php
         // If the export button is clicked, call the function to display the results
         if (isset($_POST['selected_fields']) && !empty($_POST['selected_fields'])) {
-            handle_export_paid_customers();
+            ssrSales2000_handle_export_paid_customers();
         }
         ?>
     </div>
@@ -57,7 +57,7 @@ function paid_customers_page(){
 
 
 
-function handle_export_paid_customers() {
+function ssrSales2000_handle_export_paid_customers() {
     // Check nonce for security
     if (
         !isset($_POST['export_paid_nonce']) || 
@@ -78,7 +78,7 @@ function handle_export_paid_customers() {
         $selected_fields = array_map('sanitize_text_field', $_POST['selected_fields']);
 
         // Handle export here
-        display_export_page($selected_fields, 'paid-customers');
+        ssrSales2000_display_export_page($selected_fields, 'paid-customers');
         exit;
     }
 

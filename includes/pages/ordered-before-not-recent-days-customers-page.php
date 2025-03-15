@@ -1,5 +1,5 @@
 <?php
-function ordered_before_not_recent_days_customers_page(){
+function ssrSales2000_ordered_before_not_recent_days_customers_page(){
     // Available fields that can be exported
     $available_fields = [
         'order_id' => 'Order ID',
@@ -54,15 +54,14 @@ function ordered_before_not_recent_days_customers_page(){
         <?php
         // If the export button is clicked, call the function to display the results
         if (isset($_POST['selected_fields']) && !empty($_POST['selected_fields'])) {
-            handle_export_no_recent_purchase();
+            ssrSales2000_handle_export_no_recent_purchase();
         }
         ?>
     </div>
     <?php
 }
 
-
-function handle_export_no_recent_purchase() {
+function ssrSales2000_handle_export_no_recent_purchase() {
     // Verify nonce
     if (
         ! isset($_POST['export_no_recent_purchase_nonce']) || 
@@ -82,7 +81,7 @@ function handle_export_no_recent_purchase() {
 
     if (!empty($selected_fields)) {
         // Handle export here
-        display_export_page($selected_fields, 'no-recent-purchase');
+        ssrSales2000_display_export_page($selected_fields, 'no-recent-purchase');
         exit;
     }
 

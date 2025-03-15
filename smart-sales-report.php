@@ -32,7 +32,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/sales_trend/index.php';
 
 
 // Plugin page content
-function custom_exporter_page() {
+function ssrSales2000_exporter_page() {
     $allowed_tabs = ['paid-customers', 'cancelled-customers', 'big-purchase-customers', 'ordered-before-not-recent-days'];
     $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'paid-customers';
 
@@ -55,16 +55,16 @@ function custom_exporter_page() {
             <?php
             if ($active_tab == 'paid-customers') {
                 echo '<h3>Paid Customers</h3>';
-                paid_customers_page();
+                ssrSales2000_paid_customers_page();
             } elseif ($active_tab == 'cancelled-customers') {
                 echo '<h3>Cancelled Customers</h3>';
-                cancelled_customers_page();
+                ssrSales2000_cancelled_customers_page();
             } elseif ($active_tab == 'ordered-before-not-recent-days') {
                 echo '<h3>Customers Who Ordered Before, but not in these last days</h3>';
-                ordered_before_not_recent_days_customers_page();
+                ssrSales2000_ordered_before_not_recent_days_customers_page();
             } elseif ($active_tab == 'big-purchase-customers') {
                 echo '<h3>Customers Who have spent big on their purchases</h3>';
-                ordered_big_customers_page();
+                ssrSales2000_ordered_big_customers_page();
             }
             ?>
         </div>

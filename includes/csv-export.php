@@ -1,6 +1,6 @@
 <?php
 
-function export_csv($results, $available_fields, $selected_fields) {
+function ssrSales2000_export_csv($results, $available_fields, $selected_fields) {
     // Ensure the WP_Filesystem is loaded
     if ( empty( $wp_filesystem ) ) {
         require_once( ABSPATH . 'wp-admin/includes/file.php' );

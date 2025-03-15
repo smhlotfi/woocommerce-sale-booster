@@ -3,7 +3,7 @@
 
 
 // Callback function to display the sales trend page
-function ssr_display_sales_trend() {
+function ssrSales2000_display_sales_trend() {
     $allowed_tabs = ['customers-orders', 'cancelled-customers', 'big-purchase-customers', 'ordered-before-not-recent-days'];
     $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'customers-orders';
 
@@ -35,16 +35,16 @@ function ssr_display_sales_trend() {
                     
                 </div>
                 <?php
-                // paid_customers_page();
+                // ssrSales2000_paid_customers_page();
             } elseif ($active_tab == 'cancelled-customers') {
                 echo '<h3>Cancelled Customers</h3>';
-                // cancelled_customers_page();
+                // ssrSales2000_cancelled_customers_page();
             } elseif ($active_tab == 'ordered-before-not-recent-days') {
                 echo '<h3>Customers Who Ordered Before, but not in these last days</h3>';
-                // ordered_before_not_recent_days_customers_page();
+                // ssrSales2000_ordered_before_not_recent_days_customers_page();
             } elseif ($active_tab == 'big-purchase-customers') {
                 echo '<h3>Customers Who have spent big on their purchases</h3>';
-                // ordered_big_customers_page();
+                // ssrSales2000_ordered_big_customers_page();
             }
             ?>
         </div>
@@ -56,7 +56,7 @@ function ssr_display_sales_trend() {
 
 
 // Fetch completed orders per day
-function ssr_get_sales_data() {
+function ssrSales2000_get_sales_data() {
     global $wpdb;
     // Get order counts per day for completed and canceled orders
     $daily_results = $wpdb->get_results("
@@ -79,7 +79,7 @@ function ssr_get_sales_data() {
     ", ARRAY_A);
 
     // Debugging: Output raw results and stop execution
-    // Check on : DOMAIN/wp-admin/admin-ajax.php?action=ssr_get_sales_data
+    // Check on : DOMAIN/wp-admin/admin-ajax.php?action=ssrSales2000_get_sales_data
     // echo '<pre>';
     // print_r($total_counts);
     // echo '</pre>';
@@ -91,12 +91,12 @@ function ssr_get_sales_data() {
     ]);
     // wp_send_json($results); // Send data as JSON
 }
-add_action('wp_ajax_ssr_get_sales_data', 'ssr_get_sales_data');
+add_action('wp_ajax_ssrSales2000_get_sales_data', 'ssrSales2000_get_sales_data');
 
 
 
 // Enqueue scripts for Chart.js
-function ssr_enqueue_admin_scripts($hook) {
+function ssrSales2000_enqueue_admin_scripts($hook) {
     if ($hook !== 'smart-sales-report_page_ssr-sales-trend') {
         return;
     }
@@ -119,4 +119,4 @@ function ssr_enqueue_admin_scripts($hook) {
         'ajax_url' => admin_url('admin-ajax.php'),
     ));
 }
-add_action('admin_enqueue_scripts', 'ssr_enqueue_admin_scripts');
+add_action('admin_enqueue_scripts', 'ssrSales2000_enqueue_admin_scripts');

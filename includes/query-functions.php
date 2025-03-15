@@ -1,6 +1,6 @@
 <?php
 // Function to build the SQL query for fetching orders
-function build_get_completed_or_processing_query($sql_fields) {
+function ssrSales2000_build_get_completed_or_processing_query($sql_fields) {
     global $wpdb;
     $fields = implode(', ', $sql_fields);
     return "
@@ -13,7 +13,7 @@ function build_get_completed_or_processing_query($sql_fields) {
 }
 
 // Function to generate the SQL fields based on the selected ones
-// function generate_sql_fields($selected_fields) {
+// function ssrSales2000_generate_sql_fields($selected_fields) {
 //     return array_map(function ($field) {
 //         return "`$field`";
 //     }, $selected_fields);
