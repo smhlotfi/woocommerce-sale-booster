@@ -9,12 +9,10 @@ function ssrSales2000_display_export_page($selected_fields, $type) {
 
     $available_fields = ssrSales2000_get_available_fields();
     
-
     switch ($type) {
         case 'paid-customers':
             $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
             $results = ssrSales2000_build_get_completed_or_processing_query($sql_fields);
-
             foreach ($results as &$row) {
                 foreach ($selected_fields as $field) {
                     
@@ -59,6 +57,7 @@ function ssrSales2000_display_export_page($selected_fields, $type) {
             
             $sql_fields = ssrSales2000_generate_sql_fields($selected_fields);
             $results = ssrSales2000_build_get_high_value_customers_query($sql_fields, $min_value);
+            
             break;
 
     }
@@ -121,90 +120,96 @@ function ssrSales2000_generate_sql_fields($selected_fields) {
 // Function to build SQL query
 function ssrSales2000_build_get_completed_or_processing_query($fields) {
     global $wpdb;
+    $allowed_fields = [
+        'order_id' => 'o.id AS order_id',
+        'phone_number' => "COALESCE(oa.phone, '') AS phone_number",
+        'email' => "COALESCE(oa.email, '') AS email",
+        'first_name' => 'oa.first_name AS first_name',
+        'last_name' => 'oa.last_name AS last_name',
+        'status' => 'o.status AS status',
+        'order_date' => 'o.date_created_gmt AS order_date',
+        'total_amount' => 'o.total_amount AS total_amount',
+    ];
+
+    $safe_fields = array_intersect($fields, $allowed_fields);
     
-    // Escape only table and column names, but leave SQL functions like COALESCE untouched
-    $escaped_fields = array_map(function($field) use ($wpdb) {
-        // Only escape if it's a simple table or column name
-        if (preg_match('/^[a-zA-Z0-9_\.]+$/', $field)) {
-            return esc_sql($field);
-        }
-        // Otherwise, leave the SQL function as is
-        return $field;
-    }, $fields);
 
-    // Join fields into a comma-separated string for SQL
-    $fields_sql = implode(', ', $escaped_fields);
+    if (empty($safe_fields)) {
+        die("return");
+        return [];
+    }
 
-    // die("<pre>". print_r($fields_sql, true) ."</pre>");
+    $fields_sql = implode(', ', $safe_fields);
 
-
-
-
-    // return $wpdb->get_results(
-    //     $wpdb->prepare("
-    //     SELECT DISTINCT $fields_sql
-    //     FROM {$wpdb->prefix}wc_orders AS o
-    //     LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
-    //         ON o.id = oa.order_id AND oa.address_type = 'billing'
-    //     WHERE o.status IN (%s, %s);
-    // ", 'wc-processing', 'wc-completed'), ARRAY_A);
-
-
-
+    $legacy_fields_sql = str_replace(
+        ['o.id', 'oa.phone', 'oa.email', 'oa.first_name', 'oa.last_name', 'o.status', 'o.date_created_gmt', 'o.total_amount'],
+        ['p.ID', 'pm_phone.meta_value', 'pm_email.meta_value', 'pm_first_name.meta_value', 'pm_last_name.meta_value', 'p.post_status', 'p.post_date', 'pm_total_amount.meta_value'],
+        $fields_sql
+    );
+    // die(print_r($fields_sql, true));
     $woo_version = get_option('woocommerce_version');
+    $table_prefix = sanitize_key($wpdb->prefix);
+
 
     if (version_compare($woo_version, '8.0', '>=')) {
         // For WooCommerce 8.0+ (new table) and pre-8.0 orders (old table)
-        return $wpdb->get_results(
-            $wpdb->prepare("
-                -- New table query for WooCommerce 8.0+
-                (SELECT DISTINCT o.id AS order_id, 
-                                COALESCE(oa.phone, '') AS phone_number, 
-                                COALESCE(oa.email, '') AS email, 
-                                oa.first_name AS first_name, 
-                                oa.last_name AS last_name, 
-                                o.status, 
-                                o.date_created_gmt AS order_date
-                FROM {$wpdb->prefix}wc_orders AS o
-                LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
+        $query = "-- New table query for WooCommerce 8.0+
+                (SELECT DISTINCT {$fields_sql}
+                FROM {$table_prefix}wc_orders AS o
+                LEFT JOIN {$table_prefix}wc_order_addresses AS oa 
                     ON o.id = oa.order_id AND oa.address_type = 'billing'
-                WHERE o.status IN ('wc-processing', 'wc-completed'))
+                WHERE o.status IN (%s, %s))
                 
                 UNION ALL
                 
                 -- Old table query for pre-8.0 WooCommerce
-                (SELECT DISTINCT p.ID AS order_id, 
-                                COALESCE(pm_phone.meta_value, '') AS phone_number, 
-                                COALESCE(pm_email.meta_value, '') AS email, 
-                                pm_first_name.meta_value AS first_name, 
-                                pm_last_name.meta_value AS last_name, 
-                                p.post_status AS status, 
-                                p.post_date AS order_date
-                FROM {$wpdb->prefix}posts AS p
-                LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
+                (SELECT DISTINCT {$legacy_fields_sql}
+                FROM {$table_prefix}posts AS p
+                LEFT JOIN {$table_prefix}postmeta AS pm_phone
                     ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
-                LEFT JOIN {$wpdb->prefix}postmeta AS pm_email
+                LEFT JOIN {$table_prefix}postmeta AS pm_email
                     ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
-                LEFT JOIN {$wpdb->prefix}postmeta AS pm_first_name
+                LEFT JOIN {$table_prefix}postmeta AS pm_first_name
                     ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
-                LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
+                LEFT JOIN {$table_prefix}postmeta AS pm_last_name
                     ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+                LEFT JOIN {$table_prefix}postmeta AS pm_total_amount
+                    ON p.ID = pm_total_amount.post_id AND pm_total_amount.meta_key = '_order_total' 
                 WHERE p.post_type = 'shop_order'
-                AND p.post_status IN ('wc-processing', 'wc-completed'))
-                
-                ORDER BY order_date DESC
-            "), ARRAY_A);
-    } else {
-        // Use only old WooCommerce order structure (pre-8.0)
+                AND p.post_status IN (%s, %s))";
+
+
         return $wpdb->get_results(
-            $wpdb->prepare("
-                SELECT DISTINCT p.ID AS order_id, 
-                                COALESCE(pm_phone.meta_value, '') AS phone_number, 
-                                COALESCE(pm_email.meta_value, '') AS email, 
-                                pm_first_name.meta_value AS first_name, 
-                                pm_last_name.meta_value AS last_name, 
-                                p.post_status AS status, 
-                                p.post_date AS order_date
+            $wpdb->prepare($query, 'wc-processing', 'wc-completed', 'wc-processing', 'wc-completed'),
+            ARRAY_A
+        );
+
+    } else {
+
+
+        // Use only old WooCommerce order structure (pre-8.0)
+        $allowed_fields = [
+            'order_id' => 'p.ID AS order_id',
+            'phone_number' => "COALESCE(pm_phone.meta_value, '') AS phone_number",
+            'email' => "COALESCE(pm_email.meta_value, '') AS email",
+            'first_name' => 'pm_first_name.meta_value AS first_name',
+            'last_name' => 'pm_last_name.meta_value AS last_name',
+            'status' => 'p.post_status AS status',
+            'order_date' => 'p.post_date AS order_date',
+            'total_amount' => 'pm_total_amount.meta_value AS total_amount',
+        ];
+        $safe_fields = array_intersect($fields, $allowed_fields);
+
+        if (empty($safe_fields)) {
+            die("return");
+            return [];
+        }
+        $fields_sql = implode(', ', array_map(function ($field) use ($allowed_fields) {
+            return $allowed_fields[$field];
+        }, $safe_fields));
+
+        $query = "
+                SELECT DISTINCT {$fields_sql}
                 FROM {$wpdb->prefix}posts AS p
                 LEFT JOIN {$wpdb->prefix}postmeta AS pm_phone
                     ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
@@ -214,15 +219,16 @@ function ssrSales2000_build_get_completed_or_processing_query($fields) {
                     ON p.ID = pm_first_name.post_id AND pm_first_name.meta_key = '_billing_first_name'
                 LEFT JOIN {$wpdb->prefix}postmeta AS pm_last_name
                     ON p.ID = pm_last_name.post_id AND pm_last_name.meta_key = '_billing_last_name'
+                LEFT JOIN {$wpdb->prefix}postmeta AS pm_total_amount
+                    ON p.ID = pm_total_amount.post_id AND pm_total_amount.meta_key = '_order_total'
                 WHERE p.post_type = 'shop_order'
-                AND p.post_status IN ('wc-processing', 'wc-completed')
-                ORDER BY order_date DESC
-            "), ARRAY_A);
+                AND p.post_status IN (%s, %s)";
+        
+        return $wpdb->get_results(
+            $wpdb->prepare($query, 'wc-processing', 'wc-completed'),
+            ARRAY_A
+        );
     }
-
-
-
-
 }
 
 
@@ -230,53 +236,75 @@ function ssrSales2000_build_get_completed_or_processing_query($fields) {
 function ssrSales2000_build_get_cancelled_orders_query($fields) {
     global $wpdb;
 
-    // Escape only table and column names, but leave SQL functions like COALESCE untouched
-    $escaped_fields = array_map(function($field) use ($wpdb) {
-        // Only escape if it's a simple table or column name
-        if (preg_match('/^[a-zA-Z0-9_\.]+$/', $field)) {
-            return esc_sql($field);
-        }
-        // Otherwise, leave the SQL function as is
-        return $field;
-    }, $fields);
+    $allowed_fields = [
+        'order_id' => 'o.id AS order_id',
+        'phone_number' => "COALESCE(oa.phone, '') AS phone_number",
+        'email' => "COALESCE(oa.email, '') AS email",
+        'first_name' => 'oa.first_name AS first_name',
+        'last_name' => 'oa.last_name AS last_name',
+        'status' => 'o.status AS status',
+        'order_date' => 'o.date_created_gmt AS order_date',
+        'total_amount' => 'o.total_amount AS total_amount',
+    ];
+    $safe_fields = array_intersect($fields, $allowed_fields);
+
+    if (empty($safe_fields)) {
+        die("return");
+        return [];
+    }
+
+    $fields_sql = implode(', ', $safe_fields);
+    
 
     // Join fields into a comma-separated string for SQL
-    $fields_sql = implode(', ', $escaped_fields);
-
-    return $wpdb->get_results(
-        $wpdb->prepare("
-        SELECT DISTINCT $fields_sql
+    $query = "
+        SELECT DISTINCT {$fields_sql}
         FROM {$wpdb->prefix}wc_orders AS o
         LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
             ON o.id = oa.order_id AND oa.address_type = 'billing'
-        WHERE o.status = %s
-    ", 'wc-cancelled'), ARRAY_A);
+        WHERE o.status = %s";
+
+    return $wpdb->get_results(
+        $wpdb->prepare($query, 'wc-cancelled'),
+        ARRAY_A
+    );
 }
 
 // Function to get customers who ordered before but not in the last recent days
 function ssrSales2000_build_get_customers_no_recent_purchase_query($fields, $days) {
     global $wpdb;
 
-    // Escape only table and column names, but leave SQL functions like COALESCE untouched
-    $escaped_fields = array_map(function($field) use ($wpdb) {
-        // Only escape if it's a simple table or column name
-        if (preg_match('/^[a-zA-Z0-9_\.]+$/', $field)) {
-            return esc_sql($field);
-        }
-        // Otherwise, leave the SQL function as is
-        return $field;
-    }, $fields);
+    $days = intval($days);
+    if ($days < 0 || $days > 99999) {
+        die("Invalid number of days");
+        return [];
+    }
 
-    // Join fields into a comma-separated string for SQL
-    $fields_sql = implode(', ', $escaped_fields);
+    $allowed_fields = [
+        'order_id' => 'o.id AS order_id',
+        'phone_number' => "COALESCE(oa.phone, '') AS phone_number",
+        'email' => "COALESCE(oa.email, '') AS email",
+        'first_name' => 'oa.first_name AS first_name',
+        'last_name' => 'oa.last_name AS last_name',
+        'status' => 'o.status AS status',
+        'order_date' => 'o.date_created_gmt AS order_date',
+        'total_amount' => 'o.total_amount AS total_amount',
+    ];
+    $safe_fields = array_intersect($fields, $allowed_fields);
+
+    if (empty($safe_fields)) {
+        die("return");
+        return [];
+    }
+
+    $fields_sql = implode(', ', $safe_fields);
 
 
     // Get the date X days ago
     $date_x_days_ago = gmdate('Y-m-d', strtotime("-$days days"));
     
 
-    return $wpdb->get_results(
-        $wpdb->prepare("
+    $query = "
         SELECT DISTINCT $fields_sql
         FROM {$wpdb->prefix}wc_orders AS o
         LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
@@ -291,36 +319,58 @@ function ssrSales2000_build_get_customers_no_recent_purchase_query($fields, $day
             AND o2.date_created_gmt >= %s
             AND o2.status IN ('wc-completed', 'wc-processing')
         )
-    ", $date_x_days_ago, $date_x_days_ago), ARRAY_A);
+    ";
+
+    return $wpdb->get_results(
+        $wpdb->prepare($query, $date_x_days_ago, $date_x_days_ago),
+        ARRAY_A
+    );
 }
 
 // Function to get customers with high-value purchases
 function ssrSales2000_build_get_high_value_customers_query($fields, $min_value) {
     global $wpdb;
-
-    // Escape only table and column names, but leave SQL functions like COALESCE untouched
-    $escaped_fields = array_map(function($field) use ($wpdb) {
-        // Only escape if it's a simple table or column name
-        if (preg_match('/^[a-zA-Z0-9_\.]+$/', $field)) {
-            return esc_sql($field);
-        }
-        // Otherwise, leave the SQL function as is
-        return $field;
-    }, $fields);
-
-    // Join fields into a comma-separated string for SQL
-    $fields_sql = implode(', ', $escaped_fields);
+    $min_value = floatval($min_value);
+    // die(print_r($min_value, true));
+    if ($min_value < 0 || $min_value > 9999999999) {
+        die("Invalid number of min value");
+        return [];
+    }
 
 
-    return $wpdb->get_results(
-        $wpdb->prepare("
+    $allowed_fields = [
+        'order_id' => 'o.id AS order_id',
+        'phone_number' => "COALESCE(oa.phone, '') AS phone_number",
+        'email' => "COALESCE(oa.email, '') AS email",
+        'first_name' => 'oa.first_name AS first_name',
+        'last_name' => 'oa.last_name AS last_name',
+        'status' => 'o.status AS status',
+        'order_date' => 'o.date_created_gmt AS order_date',
+        'total_amount' => 'o.total_amount AS total_amount',
+    ];
+    $safe_fields = array_intersect($fields, $allowed_fields);
+
+    if (empty($safe_fields)) {
+        die("return");
+        return [];
+    }
+
+    $fields_sql = implode(', ', $safe_fields);
+
+
+    $query = "
         SELECT DISTINCT $fields_sql
         FROM {$wpdb->prefix}wc_orders AS o
         LEFT JOIN {$wpdb->prefix}wc_order_addresses AS oa 
             ON o.id = oa.order_id AND oa.address_type = 'billing'
         WHERE o.status IN ('wc-completed', 'wc-processing')
-        AND o.total_amount >= %d
-    ", $min_value), ARRAY_A);
+        AND o.total_amount >= %f
+    ";
+
+    return $wpdb->get_results(
+        $wpdb->prepare($query, $min_value),
+        ARRAY_A
+    );
 }
 
 

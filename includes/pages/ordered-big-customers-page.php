@@ -85,7 +85,7 @@ function ssrSales2000_handle_export_big_purchase_customers() {
 
     if (!empty($selected_fields)) {
         // Handle export here
-        ssrSales2000_display_export_page($selected_fields, 'no-recent-purchase');
+        ssrSales2000_display_export_page($selected_fields, 'big-purchase-customers');
         exit;
     }
 
