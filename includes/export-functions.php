@@ -76,7 +76,7 @@ function ssrSales2000_display_export_page($selected_fields, $type) {
         echo '<input type="hidden" name="action" value="export_csv">';
         echo '<input type="hidden" name="export_data" value="' . esc_attr(json_encode($results, JSON_UNESCAPED_UNICODE)) . '">';
         echo '<input type="hidden" name="selected_fields" value="' . esc_attr(json_encode($selected_fields, JSON_UNESCAPED_UNICODE)) . '">';
-        echo '<input type="hidden" name="export_csv_nonce" value="' . $nonce . '">';
+        echo '<input type="hidden" name="export_csv_nonce" value="' . esc_attr($nonce) . '">';
         echo '<button type="submit" name="export_csv">Export CSV</button>';
         echo '</form>';
     } else {
