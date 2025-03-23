@@ -17,9 +17,9 @@ function ssrSales2000_display_sales_trend() {
         <h2>Sales Trend</h2>
         <h2 class="nav-tab-wrapper">
             <a href="?page=ssr-sales-trend&tab=customers-orders" class="nav-tab <?php echo $active_tab == 'customers-orders' ? 'nav-tab-active' : ''; ?>">Customers Orders</a>
-            <a href="?page=ssr-sales-trend&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
+            <!-- <a href="?page=ssr-sales-trend&tab=cancelled-customers" class="nav-tab <?php echo $active_tab == 'cancelled-customers' ? 'nav-tab-active' : ''; ?>">Cancelled Customers</a>
             <a href="?page=ssr-sales-trend&tab=ordered-before-not-recent-days" class="nav-tab <?php echo $active_tab == 'ordered-before-not-recent-days' ? 'nav-tab-active' : ''; ?>">No Recent Purchase</a>
-            <a href="?page=ssr-sales-trend&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a>
+            <a href="?page=ssr-sales-trend&tab=big-purchase-customers" class="nav-tab <?php echo $active_tab == 'big-purchase-customers' ? 'nav-tab-active' : ''; ?>">Big Purchase Customers</a> -->
         </h2>
 
         <div class="tab-content">
