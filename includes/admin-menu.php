@@ -16,7 +16,7 @@ function ssrSales2000_exporter_add_menu() {
 
 
 // Add Sales Trend submenu page
-function ssr_add_sales_trend_page() {
+function ssrSales2000_add_sales_trend_page() {
     add_submenu_page(
         'smart-sales-report',       // Parent menu slug
         'Sales Trend',              // Page title
@@ -26,5 +26,5 @@ function ssr_add_sales_trend_page() {
         'ssrSales2000_display_sales_trend'    // Callback function
     );
 }
-add_action('admin_menu', 'ssr_add_sales_trend_page');
+add_action('admin_menu', 'ssrSales2000_add_sales_trend_page');
 
