@@ -65,7 +65,7 @@ function ssrSales2000_handle_export_no_recent_purchase() {
     // Verify nonce
     if (
         ! isset($_POST['export_no_recent_purchase_nonce']) || 
-        ! wp_verify_nonce($_POST['export_no_recent_purchase_nonce'], 'export_no_recent_purchase_nonce')
+        ! wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['export_no_recent_purchase_nonce'])), 'export_no_recent_purchase_nonce')
     ) {
         wp_die('Security check failed.');
     }

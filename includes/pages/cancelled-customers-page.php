@@ -57,7 +57,7 @@ function ssrSales2000_cancelled_customers_page(){
 function ssrSales2000_handle_export_cancelled_customers() {
     if (
         ! isset($_POST['export_cancelled_customers_nonce']) || 
-        ! wp_verify_nonce($_POST['export_cancelled_customers_nonce'], 'export_cancelled_customers_nonce')
+        ! wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['export_cancelled_customers_nonce'])), 'export_cancelled_customers_nonce')
     ) {
         wp_die('Security check failed.');
     }

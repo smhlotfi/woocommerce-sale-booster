@@ -415,7 +415,7 @@ function ssrSales2000_handle_export_csv(){
     // Handle CSV Export
     // if (isset($_POST['export_csv'])) {
 
-        if ( ! isset( $_POST['export_csv_nonce'] ) || ! wp_verify_nonce( $_POST['export_csv_nonce'], 'export_csv_nonce' )) {
+        if ( ! isset( $_POST['export_csv_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash($_POST['export_csv_nonce'])), 'export_csv_nonce' )) {
             wp_die( 'Security check failed.' );
         }
         
@@ -424,8 +424,8 @@ function ssrSales2000_handle_export_csv(){
         }
 
         if (!empty($_POST['export_data']) && !empty($_POST['selected_fields'])) {
-            $export_results = json_decode(wp_unslash($_POST['export_data']), true);
-            $selected_fields = json_decode(wp_unslash($_POST['selected_fields']), true);
+            $export_results = json_decode(sanitize_text_field( wp_unslash($_POST['export_data'])), true);
+            $selected_fields = json_decode(sanitize_text_field( wp_unslash($_POST['selected_fields'])), true);
 
             array_walk_recursive($export_results, function (&$value) {
                 $value = mb_convert_encoding($value, 'UTF-8', 'auto');

@@ -61,7 +61,7 @@ function ssrSales2000_handle_export_paid_customers() {
     // Check nonce for security
     if (
         !isset($_POST['export_paid_nonce']) || 
-        !wp_verify_nonce($_POST['export_paid_nonce'], 'export_paid_customers')
+        !wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['export_paid_nonce'])), 'export_paid_customers')
     ) {
         wp_die('Security check failed.');
     }

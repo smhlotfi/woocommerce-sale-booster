@@ -63,7 +63,7 @@ function ssrSales2000_handle_export_big_purchase_customers() {
     // Check nonce for security
     if (
         !isset($_POST['export_big_purchase_nonce']) || 
-        !wp_verify_nonce($_POST['export_big_purchase_nonce'], 'export_big_purchase_customers')
+        !wp_verify_nonce(sanitize_text_field( wp_unslash($_POST['export_big_purchase_nonce'])), 'export_big_purchase_customers')
     ) {
         wp_die('Security check failed.');
     }
